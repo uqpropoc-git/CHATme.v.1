@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Multimodal Assistant</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#E62DA9">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <style>
+    :root {
+      --primary: #E62DA9;
+      --dark: #0D0C10;
+      --gray-text: #6b7280;
+      --bg-gradient: linear-gradient(135deg, #eecbe0 0%, #e5b9d5 50%, #d8a2c7 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-gradient);
+      overflow: hidden;
+    }
+
+    .app-viewport {
+      width: 100%;
+      height: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      display: flex !important;
+    }
+
+    /* SCREEN 1: WELCOME */
+    #welcomeScreen {
+      background: #f1f2f6;
+      padding: 20px 24px 40px;
+      justify-content: space-between;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .hero-container {
+      margin: auto 0;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .hero-avatar {
+      width: 180px;
+      height: 180px;
+    }
+
+    .welcome-bottom {
+      width: 100%;
+      padding-bottom: 20px;
+    }
+
+    .welcome-title {
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--dark);
+      margin-bottom: 20px;
+    }
+
+    .btn-primary {
+      display: block;
+      width: 100%;
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 18px 0;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(230, 45, 169, 0.35);
+      touch-action: manipulation;
+    }
+
+    .btn-primary:active {
+      background-color: #c4208e;
+      transform: scale(0.98);
+    }
+
+    /* SCREEN 2: CHAT */
+    .header {
+      padding: 16px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid #eee;
+      font-weight: bold;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: white;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: white;
+      color: var(--dark);
+    }
+
+    .bottom-container {
+      padding: 12px 16px 24px;
+      background: #ffffff;
+      border-top: 1px solid #eee;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .input-card {
+      display: flex;
+      gap: 8px;
+    }
+
+    textarea {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      resize: none;
+      height: 42px;
+      font-size: 15px;
+      line-height: 20px;
+    }
+
+    .send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-viewport">
+
+  <div class="screen active" id="welcomeScreen">
+    <div style="font-weight: bold; font-size: 14px; align-self: flex-start;">19:27</div>
+
+    <div class="hero-container">
+      <svg class="hero-avatar" viewBox="0 0 200 200" fill="none">
+        <circle cx="100" cy="100" r="80" fill="#EAEBFA"/>
+        <rect x="50" y="60" width="100" height="70" rx="35" fill="#FFFFFF" stroke="#0D0C10" stroke-width="4"/>
+        <circle cx="75" cy="95" r="18" fill="#0D0C10"/>
+        <circle cx="125" cy="95" r="18" fill="#0D0C10"/>
+        <circle cx="80" cy="90" r="6" fill="#38BDF8"/>
+        <circle cx="130" cy="90" r="6" fill="#38BDF8"/>
+        <path d="M85 118C85 118 92 124 100 124C108 124 115 118 115 118" stroke="#0D0C10" stroke-width="4" stroke-linecap="round"/>
+        <rect x="92" y="32" width="16" height="28" rx="8" fill="#E62DA9"/>
+        <circle cx="100" cy="28" r="8" fill="#FEDC85"/>
+      </svg>
+    </div>
+
+    <div class="welcome-bottom">
+      <h1 class="welcome-title">Your Smart<br>AI Assistant<br>Here</h1>
+      <button class="btn-primary" id="btnNextWelcome">Next</button>
+    </div>
+  </div>
+
+  <div class="screen" id="mainScreen">
+    <div class="header">AI Assistant</div>
+    
+    <div class="messages" id="messageList">
+      <div class="message assistant">Halo! Saya siap membantu Anda. Silakan ketik pesan atau pilih pembuat gambar.</div>
+    </div>
+
+    <div class="bottom-container">
+      <div class="controls">
+        <button class="mode-btn active" id="textModeBtn" onclick="setMode('chat')">💬 Chat Teks</button>
+        <button class="mode-btn" id="imageModeBtn" onclick="setMode('image')">🎨 Buat Gambar</button>
+      </div>
+      <div class="input-card">
+        <textarea id="userInput" placeholder="Ketik pesan..." enterkeyhint="send"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // GANTI URL DI BAWAH DENGAN URL WEB APP GAS ANDA
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwn-T-7nORURXtTY1nAnXet6CjAQdZq58KqOP68iDsQpAfCakgtPYsVqAQrhTaDK7vKRw/exec";
+  
+  let currentMode = 'chat';
+
+  // Pindah dari layar Welcome ke layar utama
+  document.getElementById('btnNextWelcome').addEventListener('click', () => {
+    document.getElementById('welcomeScreen').classList.remove('active');
+    document.getElementById('mainScreen').classList.add('active');
+  });
+
+  // Ganti mode antara chat dan image
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('textModeBtn').classList.remove('active');
+    document.getElementById('imageModeBtn').classList.remove('active');
+    
+    if (mode === 'chat') {
+      document.getElementById('textModeBtn').classList.add('active');
+      document.getElementById('userInput').placeholder = "Ketik pesan...";
+    } else {
+      document.getElementById('imageModeBtn').classList.add('active');
+      document.getElementById('userInput').placeholder = "Deskripsikan gambar...";
+    }
+  }
+
+  // Menambahkan gelembung chat ke antarmuka
+  function appendMessage(sender, text) {
+    const list = document.getElementById('messageList');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    
+    const msgId = 'msg-' + Date.now();
+    msgDiv.id = msgId;
+    msgDiv.innerHTML = text;
+    
+    list.appendChild(msgDiv);
+    list.scrollTop = list.scrollHeight;
+    
+    return msgId;
+  }
+
+  // Mengubah isi gelembung chat (digunakan saat loading selesai)
+  function updateMessage(id, text) {
+    const msgDiv = document.getElementById(id);
+    if (msgDiv) {
+      msgDiv.innerHTML = text;
+      const list = document.getElementById('messageList');
+      list.scrollTop = list.scrollHeight;
+    }
+  }
+
+  // Mengirim pesan ke GAS
+  async function sendMessage() {
+    const inputEl = document.getElementById('userInput');
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    appendMessage('user', text);
+    inputEl.value = '';
+
+    const loadingId = appendMessage('assistant', 'Sedang memproses...');
+
+    try {
+      const response = await fetch(GAS_API_URL, {
+        method: 'POST',
+        // Menggunakan text/plain mencegah preflight (OPTIONS) request sehingga lebih aman dari error CORS
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        },
+        body: JSON.stringify({ action: currentMode, prompt: text })
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        if (currentMode === 'image') {
+          // Jika mode gambar, tampilkan gambar
+          updateMessage(loadingId, `<img src="${result.data}" style="max-width:100%; border-radius:12px;" alt="Hasil Generasi Gambar"/>`);
+        } else {
+          // Jika mode chat, tampilkan teks markdown sederhana (bisa diperbaiki dengan library markdown parser jika perlu)
+          updateMessage(loadingId, result.data.replace(/\n/g, '<br>'));
+        }
+      } else {
+        updateMessage(loadingId, 'Error: ' + result.message);
+      }
+    } catch (error) {
+      updateMessage(loadingId, 'Terjadi kesalahan jaringan atau server GAS tidak merespons.');
+    }
+  }
+
+  // Tangkap tombol enter untuk mengirim
+  document.getElementById('userInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Mendaftarkan Service Worker untuk PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then((registration) => {
+        console.log('ServiceWorker siap:', registration.scope);
+      }).catch((error) => {
+        console.log('ServiceWorker gagal:', error);
+      });
+    });
+  }
+</script>
+</body>
+</html>

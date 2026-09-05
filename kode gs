@@ -1,0 +1,75 @@
+const GEMINI_API_KEY = "AQ.Ab8RN6If1eQhEo7NbuDbeUQA-zbrEZqhJMuSzlM2VPkB0T4DFw"; // Wajib diisi!
+const GEMINI_MODEL = "gemini-1.5-flash"; 
+
+// 1. Menerima request HTTP POST dari GitHub Pages
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const action = data.action; // 'chat' atau 'image'
+    const prompt = data.prompt;
+
+    let result = {};
+
+    if (action === 'chat') {
+      const reply = askChatGPT(prompt);
+      result = { status: 'success', data: reply };
+    } else if (action === 'image') {
+      const imageUrl = generateImagePrompt(prompt);
+      result = { status: 'success', data: imageUrl };
+    } else {
+      result = { status: 'error', message: 'Action tidak valid' };
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Mencegah error jika browser mengirimkan OPTIONS request (CORS)
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ status: "API Active" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// FUNGSI GEMINI API
+function askChatGPT(userMessage) {
+  if (typeof GEMINI_API_KEY === 'undefined' || !GEMINI_API_KEY || GEMINI_API_KEY === "MASUKKAN_API_KEY_ANDA_DISINI") {
+    throw new Error("API Key belum diset!");
+  }
+  
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const payload = {
+    contents: [{ role: "user", parts: [{ text: userMessage }] }]
+  };
+  const options = {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+  
+  const response = UrlFetchApp.fetch(url, options);
+  const json = JSON.parse(response.getContentText());
+  
+  if (json.error) {
+    throw new Error(json.error.message);
+  }
+  
+  if (json.candidates && json.candidates[0].content) {
+    return json.candidates[0].content.parts[0].text;
+  }
+  
+  return "Tidak ada respon dari AI.";
+}
+
+// FUNGSI POLLINATIONS (Gratis pembuat gambar tanpa key)
+function generateImagePrompt(promptText) {
+  const encodedPrompt = encodeURIComponent(promptText);
+  return `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 100000)}&nologo=true`;
+}
